@@ -1,0 +1,22 @@
+- server:
+      port: 443
+      domain:
+        subject: minio.local
+      https: /var/local/step
+      log: /var/log/nginx
+      locations:
+          - type: proxy_pass
+            value: http://storage:9000
+            include: /etc/nginx/includes/default.minio_proxy.conf
+      redirect: 80
+- server:
+      port: 443
+      domain:
+        subject: console.minio.local
+      https: /var/local/step
+      log: /var/log/nginx
+      locations:
+          - type: proxy_pass
+            value: http://storage:9001
+            include: /etc/nginx/includes/default.proxy.conf
+      redirect: 80

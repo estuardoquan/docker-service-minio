@@ -1,0 +1,51 @@
+networks:
+    storage_network:
+        driver: bridge
+    ipvlan:
+        external: true
+        name: ipvlan_network
+volumes:
+    step:
+        external: true
+        name: step_certs
+services:
+    storage:
+        image: dqio/minio:latest
+        volumes:
+            - ./data:/data
+            - step:/var/local/step
+        environment:
+            MINIO_ROOT_USER: storage_admin
+            MINIO_ROOT_PASSWORD: storage_secret
+            MINIO_SECRET_KEY_FILE: secret_key
+            MINIO_CONFIG_ENV_FILE: config.env
+            MINIO_ROOT_USER_FILE: access_key
+            MINIO_ACCESS_KEY_FILE: access_key
+            MINIO_KMS_SECRET_KEY_FILE: kms_master_key
+            MINIO_ROOT_PASSWORD_FILE: secret_key
+            MINIO_BROWSER_REDIRECT_URL: https://console.minio.local
+        user: 1000:1000
+        networks:
+            - storage_network
+        restart: unless-stopped
+    servers:
+        image: dqio/servers:latest
+        environment:
+            SERVER_YAML: /etc/nginx/yaml/servers.yaml
+            SERVER_WATCH_CRT: /var/local/step/site.crt
+        volumes:
+            - step:/var/local/step:ro
+            - ./servers.yaml:/etc/nginx/yaml/servers.yaml
+        networks:
+            storage_network:
+                aliases:
+                    - www.minio.local
+            ipvlan:
+                ipv4_address: 179.36.1.85
+        ports:
+            - 80
+            - 443
+        depends_on:
+            - storage
+        restart: unless-stopped
+

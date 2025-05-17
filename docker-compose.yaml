@@ -1,14 +1,36 @@
 networks:
     storage_network:
         driver: bridge
+    ca:
+        external: true
+        name: step_ca_network
     ipvlan:
         external: true
         name: ipvlan_network
 volumes:
     step:
-        external: true
-        name: step_certs
+        driver: local
+secrets:
+    provisioner_password:
+        file: $PROVISIONER_PASSWORD_FILE
 services:
+    crt:
+        image: dqio/crtpatch:latest
+        environment:
+            STEP_INIT_NAME: $CRT_STEP_INIT_NAME
+            STEP_INIT_DNS: $CRT_STEP_INIT_DNS
+            STEP_CA_URL: $CRT_STEP_CA_URL
+            STEP_FINGERPRINT: $CRT_STEP_FINGERPRINT
+            STEP_KID: $CRT_STEP_KID
+            STEP_RENEW_PERIOD: $CRT_STEP_RENEW_PERIOD
+            STEP_PROVISIONER_PASSWORD_FILE: /run/secrets/provisioner_password
+        volumes:
+            - step:/var/local/step
+        secrets:
+            - provisioner_password
+        networks:
+            - ca
+        restart: unless-stopped
     storage:
         image: dqio/minio:latest
         volumes:
@@ -17,12 +39,12 @@ services:
         environment:
             MINIO_ROOT_USER: storage_admin
             MINIO_ROOT_PASSWORD: storage_secret
-            MINIO_SECRET_KEY_FILE: secret_key
-            MINIO_CONFIG_ENV_FILE: config.env
-            MINIO_ROOT_USER_FILE: access_key
-            MINIO_ACCESS_KEY_FILE: access_key
-            MINIO_KMS_SECRET_KEY_FILE: kms_master_key
-            MINIO_ROOT_PASSWORD_FILE: secret_key
+            # MINIO_SECRET_KEY_FILE: secret_key
+            # MINIO_CONFIG_ENV_FILE: config.env
+            # MINIO_ROOT_USER_FILE: access_key
+            # MINIO_ACCESS_KEY_FILE: access_key
+            # MINIO_KMS_SECRET_KEY_FILE: kms_master_key
+            # MINIO_ROOT_PASSWORD_FILE: secret_key
             MINIO_BROWSER_REDIRECT_URL: https://console.minio.local
         user: 1000:1000
         networks:
@@ -38,8 +60,6 @@ services:
             - ./servers.yaml:/etc/nginx/yaml/servers.yaml
         networks:
             storage_network:
-                aliases:
-                    - www.minio.local
             ipvlan:
                 ipv4_address: 179.36.1.85
         ports:

@@ -37,15 +37,9 @@ services:
             - ./data:/data
             - step:/var/local/step
         environment:
-            MINIO_ROOT_USER: storage_admin
-            MINIO_ROOT_PASSWORD: storage_secret
-            # MINIO_SECRET_KEY_FILE: secret_key
-            # MINIO_CONFIG_ENV_FILE: config.env
-            # MINIO_ROOT_USER_FILE: access_key
-            # MINIO_ACCESS_KEY_FILE: access_key
-            # MINIO_KMS_SECRET_KEY_FILE: kms_master_key
-            # MINIO_ROOT_PASSWORD_FILE: secret_key
-            MINIO_BROWSER_REDIRECT_URL: https://console.minio.local
+            MINIO_ROOT_USER: $STORAGE_MINIO_ROOT_USER
+            MINIO_ROOT_PASSWORD: $STORAGE_MINIO_ROOT_PASSWORD
+            MINIO_BROWSER_REDIRECT_URL: $STORAGE_MINIO_BROWSER_REDIRECT_URL
         user: 1000:1000
         networks:
             - storage_network

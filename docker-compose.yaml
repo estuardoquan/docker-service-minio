@@ -55,7 +55,7 @@ services:
         networks:
             storage_network:
             ipvlan:
-                ipv4_address: 179.36.1.85
+                ipv4_address: $SERVER_IPVLAN_ADDRESS
         ports:
             - 80
             - 443
